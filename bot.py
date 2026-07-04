@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
@@ -34,7 +35,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await update.message.reply_text(f"Here are your signature options:\n\n{signatures}")
 
 def main():
-    # Retrieve the token from environment variables (important for production!)
+    # Retrieve the token from environment variables
     TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
     
     if not TOKEN:
@@ -47,6 +48,14 @@ def main():
     # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    # --- PYTHON 3.14+ ASYNCIO EVENT LOOP FIX ---
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    # --------------------------------------------
 
     # Start long polling
     logger.info("Bot is starting up...")
